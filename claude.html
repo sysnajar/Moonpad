@@ -201,107 +201,7 @@
         </div>
         
         <div id="cells">
-            <div class="cell" data-cell-type="markdown" data-cell-id="md-1" draggable="true">
-                <div class="cell-type">Markdown</div>
-                <div class="cell-controls">
-                    <div class="cell-move">↕</div>
-                </div>
-                <div class="input-area">
-                    <div class="markdown-editor" style="display: none;">
-                        <textarea id="md-editor-1">## Welcome to Lua Notebook!
-
-This is a **markdown** cell where you can:
-- Write documentation
-- Explain your code
-- Create formatted text
-
-The cell below is a _code_ cell that you can execute.</textarea>
-                    </div>
-                    <div class="markdown-render">
-                        <h2>Welcome to Lua Notebook!</h2>
-                        <p>This is a <strong>markdown</strong> cell where you can:</p>
-                        <ul>
-                            <li>Write documentation</li>
-                            <li>Explain your code</li>
-                            <li>Create formatted text</li>
-                        </ul>
-                        <p>The cell below is a <em>code</em> cell that you can execute.</p>
-                    </div>
-                    <div class="cell-buttons">
-                        <button class="edit-button">Edit</button>
-                        <button class="delete-cell">Delete</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="cell" data-cell-type="code" data-cell-id="code-1" draggable="true">
-                <div class="cell-type">Lua</div>
-                <div class="cell-controls">
-                    <div class="cell-move">↕</div>
-                </div>
-                <div class="input-area">
-                    <span class="cell-number">In [1]:</span>
-                    <div class="code-editor-container">
-                        <textarea id="code-editor-1">-- Try running this code
-print("Hello, Lua Notebook!")
-for i = 1, 5 do
-    print("Counter: " .. i)
-end</textarea>
-                    </div>
-                    <div class="cell-buttons">
-                        <button class="run-button" hx-post="/api/execute" hx-include="closest .code-editor-container" hx-target="closest .cell .output-area" hx-indicator=".spinner">
-                            Run <span class="spinner" style="display:none;"></span>
-                        </button>
-                        <button class="delete-cell">Delete</button>
-                    </div>
-                </div>
-                <div class="output-area" id="output-1"></div>
-            </div>
-
-            <div class="cell" data-cell-type="markdown" data-cell-id="md-2" draggable="true">
-                <div class="cell-type">Markdown</div>
-                <div class="cell-controls">
-                    <div class="cell-move">↕</div>
-                </div>
-                <div class="input-area">
-                    <div class="markdown-editor" style="display: none;">
-                        <textarea id="md-editor-2">### Try some math in Lua
-
-Lua has powerful built-in math functions that you can use.</textarea>
-                    </div>
-                    <div class="markdown-render">
-                        <h3>Try some math in Lua</h3>
-                        <p>Lua has powerful built-in math functions that you can use.</p>
-                    </div>
-                    <div class="cell-buttons">
-                        <button class="edit-button">Edit</button>
-                        <button class="delete-cell">Delete</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="cell" data-cell-type="code" data-cell-id="code-2" draggable="true">
-                <div class="cell-type">Lua</div>
-                <div class="cell-controls">
-                    <div class="cell-move">↕</div>
-                </div>
-                <div class="input-area">
-                    <span class="cell-number">In [2]:</span>
-                    <div class="code-editor-container">
-                        <textarea id="code-editor-2">-- Math example
-print("Pi is approximately: " .. math.pi)
-print("Square root of 16: " .. math.sqrt(16))
-print("Random number: " .. math.random())</textarea>
-                    </div>
-                    <div class="cell-buttons">
-                        <button class="run-button" hx-post="/api/execute" hx-include="closest .code-editor-container" hx-target="closest .cell .output-area" hx-indicator=".spinner">
-                            Run <span class="spinner" style="display:none;"></span>
-                        </button>
-                        <button class="delete-cell">Delete</button>
-                    </div>
-                </div>
-                <div class="output-area" id="output-2"></div>
-            </div>
+            <!-- Initially empty - cells will be added by user -->
         </div>
     </div>
 
@@ -310,8 +210,8 @@ print("Random number: " .. math.random())</textarea>
         const codeEditors = {};
         const markdownEditors = {};
         let cellCounter = {
-            code: 2,
-            md: 2
+            code: 0,
+            md: 0
         };
 
         document.querySelectorAll('[id^="code-editor-"]').forEach(textarea => {
