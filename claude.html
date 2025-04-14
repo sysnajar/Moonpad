@@ -1,0 +1,634 @@
+<!-- File: html/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lua Notebook</title>
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/lua/lua.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .notebook-container {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .cell {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            position: relative;
+            background-color: white;
+        }
+        .cell:last-child {
+            border-bottom: none;
+        }
+        .cell-controls {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 30px;
+            background-color: #f8f8f8;
+            border-right: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+        .cell-move {
+            cursor: move;
+            color: #999;
+            font-size: 14px;
+            padding: 3px;
+            user-select: none;
+        }
+        .cell-move:hover {
+            color: #333;
+        }
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            margin-left: 30px;
+        }
+        .cell-number {
+            color: #999;
+            font-family: monospace;
+            user-select: none;
+            margin-bottom: 5px;
+        }
+        .CodeMirror {
+            height: auto;
+            min-height: 80px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .run-button {
+            align-self: flex-end;
+            margin-top: 5px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .output-area {
+            background-color: #f8f8f8;
+            padding: 10px 10px 10px 40px;
+            border-radius: 3px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            display: none;
+            margin-left: 30px;
+        }
+        .toolbar {
+            padding: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .add-cell {
+            padding: 5px 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .notebook-title {
+            font-size: 24px;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .markdown-render {
+            padding: 10px;
+            margin-left: 30px;
+            border: 1px solid #eee;
+            border-radius: 3px;
+            background-color: white;
+        }
+        .markdown-render h1, .markdown-render h2, .markdown-render h3 {
+            margin-top: 0.5em;
+        }
+        .edit-button {
+            align-self: flex-end;
+            margin-top: 5px;
+            padding: 5px 10px;
+            background-color: #607D8B;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .cell-buttons {
+            display: flex;
+            gap: 5px;
+            align-self: flex-end;
+        }
+        .dragging {
+            opacity: 0.5;
+            border: 2px dashed #666;
+        }
+        .cell-type {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 12px;
+            color: #999;
+            background-color: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .delete-cell {
+            padding: 5px 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .cell-drop-area {
+            height: 10px;
+            margin: 0;
+            transition: height 0.2s;
+        }
+        .cell-drop-area.active {
+            height: 40px;
+            background-color: #e3f2fd;
+            border: 2px dashed #2196F3;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="notebook-title" contenteditable="true">Untitled Lua Notebook</h1>
+    
+    <div class="notebook-container">
+        <div class="toolbar">
+            <button class="add-cell" id="add-code-cell">+ Add Code Cell</button>
+            <button class="add-cell" id="add-text-cell">+ Add Text Cell</button>
+            <span>Lua Kernel</span>
+        </div>
+        
+        <div id="cells">
+            <div class="cell" data-cell-type="markdown" data-cell-id="md-1" draggable="true">
+                <div class="cell-type">Markdown</div>
+                <div class="cell-controls">
+                    <div class="cell-move">↕</div>
+                </div>
+                <div class="input-area">
+                    <div class="markdown-editor" style="display: none;">
+                        <textarea id="md-editor-1">## Welcome to Lua Notebook!
+
+This is a **markdown** cell where you can:
+- Write documentation
+- Explain your code
+- Create formatted text
+
+The cell below is a _code_ cell that you can execute.</textarea>
+                    </div>
+                    <div class="markdown-render">
+                        <h2>Welcome to Lua Notebook!</h2>
+                        <p>This is a <strong>markdown</strong> cell where you can:</p>
+                        <ul>
+                            <li>Write documentation</li>
+                            <li>Explain your code</li>
+                            <li>Create formatted text</li>
+                        </ul>
+                        <p>The cell below is a <em>code</em> cell that you can execute.</p>
+                    </div>
+                    <div class="cell-buttons">
+                        <button class="edit-button">Edit</button>
+                        <button class="delete-cell">Delete</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cell" data-cell-type="code" data-cell-id="code-1" draggable="true">
+                <div class="cell-type">Lua</div>
+                <div class="cell-controls">
+                    <div class="cell-move">↕</div>
+                </div>
+                <div class="input-area">
+                    <span class="cell-number">In [1]:</span>
+                    <div class="code-editor-container">
+                        <textarea id="code-editor-1">-- Try running this code
+print("Hello, Lua Notebook!")
+for i = 1, 5 do
+    print("Counter: " .. i)
+end</textarea>
+                    </div>
+                    <div class="cell-buttons">
+                        <button class="run-button" hx-post="/api/execute" hx-include="closest .code-editor-container" hx-target="closest .cell .output-area" hx-indicator=".spinner">
+                            Run <span class="spinner" style="display:none;"></span>
+                        </button>
+                        <button class="delete-cell">Delete</button>
+                    </div>
+                </div>
+                <div class="output-area" id="output-1"></div>
+            </div>
+
+            <div class="cell" data-cell-type="markdown" data-cell-id="md-2" draggable="true">
+                <div class="cell-type">Markdown</div>
+                <div class="cell-controls">
+                    <div class="cell-move">↕</div>
+                </div>
+                <div class="input-area">
+                    <div class="markdown-editor" style="display: none;">
+                        <textarea id="md-editor-2">### Try some math in Lua
+
+Lua has powerful built-in math functions that you can use.</textarea>
+                    </div>
+                    <div class="markdown-render">
+                        <h3>Try some math in Lua</h3>
+                        <p>Lua has powerful built-in math functions that you can use.</p>
+                    </div>
+                    <div class="cell-buttons">
+                        <button class="edit-button">Edit</button>
+                        <button class="delete-cell">Delete</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cell" data-cell-type="code" data-cell-id="code-2" draggable="true">
+                <div class="cell-type">Lua</div>
+                <div class="cell-controls">
+                    <div class="cell-move">↕</div>
+                </div>
+                <div class="input-area">
+                    <span class="cell-number">In [2]:</span>
+                    <div class="code-editor-container">
+                        <textarea id="code-editor-2">-- Math example
+print("Pi is approximately: " .. math.pi)
+print("Square root of 16: " .. math.sqrt(16))
+print("Random number: " .. math.random())</textarea>
+                    </div>
+                    <div class="cell-buttons">
+                        <button class="run-button" hx-post="/api/execute" hx-include="closest .code-editor-container" hx-target="closest .cell .output-area" hx-indicator=".spinner">
+                            Run <span class="spinner" style="display:none;"></span>
+                        </button>
+                        <button class="delete-cell">Delete</button>
+                    </div>
+                </div>
+                <div class="output-area" id="output-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize CodeMirror editors for code cells
+        const codeEditors = {};
+        const markdownEditors = {};
+        let cellCounter = {
+            code: 2,
+            md: 2
+        };
+
+        document.querySelectorAll('[id^="code-editor-"]').forEach(textarea => {
+            const id = textarea.id.split('-').pop();
+            codeEditors[id] = CodeMirror.fromTextArea(textarea, {
+                mode: "lua",
+                theme: "dracula",
+                lineNumbers: true,
+                indentUnit: 4,
+                tabSize: 4,
+                lineWrapping: true,
+                autoCloseBrackets: true,
+                matchBrackets: true
+            });
+            codeEditors[id].refresh();
+        });
+
+        document.querySelectorAll('[id^="md-editor-"]').forEach(textarea => {
+            const id = textarea.id.split('-').pop();
+            markdownEditors[id] = CodeMirror.fromTextArea(textarea, {
+                mode: "markdown",
+                theme: "dracula",
+                lineNumbers: false,
+                lineWrapping: true
+            });
+            markdownEditors[id].refresh();
+        });
+
+        // Toggle markdown editing
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('edit-button')) {
+                const cell = e.target.closest('.cell');
+                const cellId = cell.dataset.cellId;
+                const id = cellId.split('-').pop();
+                const mdEditor = cell.querySelector('.markdown-editor');
+                const mdRender = cell.querySelector('.markdown-render');
+                const editButton = e.target;
+
+                if (mdEditor.style.display === 'none') {
+                    mdEditor.style.display = 'block';
+                    mdRender.style.display = 'none';
+                    editButton.textContent = 'Render';
+                    markdownEditors[id].refresh();
+                } else {
+                    mdEditor.style.display = 'none';
+                    mdRender.style.display = 'block';
+                    editButton.textContent = 'Edit';
+                    // Update markdown render
+                    mdRender.innerHTML = marked.parse(markdownEditors[id].getValue());
+                }
+            }
+        });
+
+        // Connect HTMX with CodeMirror for code execution
+        document.body.addEventListener('htmx:configRequest', function(evt) {
+            if (evt.detail.path === '/api/execute') {
+                const cell = evt.detail.elt.closest('.cell');
+                const cellId = cell.dataset.cellId;
+                const id = cellId.split('-').pop();
+                
+                // Get code from CodeMirror
+                const code = codeEditors[id].getValue();
+                
+                // Add the code to the parameters
+                evt.detail.parameters = { code: code };
+            }
+        });
+
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            if (evt.detail.path === '/api/execute') {
+                const cell = evt.detail.elt.closest('.cell');
+                const outputArea = cell.querySelector('.output-area');
+                outputArea.style.display = 'block';
+                outputArea.textContent = 'Executing...';
+            }
+        });
+
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.detail.path === '/api/execute') {
+                const cell = evt.detail.elt.closest('.cell');
+                const outputArea = cell.querySelector('.output-area');
+                
+                try {
+                    const response = JSON.parse(evt.detail.xhr.responseText);
+                    if (response.success) {
+                        outputArea.textContent = response.output || 'No output';
+                    } else {
+                        outputArea.textContent = 'Error: ' + (response.error || 'Unknown error');
+                    }
+                } catch (e) {
+                    outputArea.textContent = 'Error parsing response: ' + evt.detail.xhr.responseText;
+                }
+                
+                outputArea.style.display = 'block';
+            }
+        });
+
+        // Delete cells
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('delete-cell')) {
+                const cell = e.target.closest('.cell');
+                cell.remove();
+                renumberCodeCells();
+            }
+        });
+
+        // Add new cells
+        document.getElementById('add-code-cell').addEventListener('click', function() {
+            cellCounter.code++;
+            const newCellId = `code-${cellCounter.code}`;
+            const newCell = document.createElement('div');
+            newCell.className = 'cell';
+            newCell.setAttribute('data-cell-type', 'code');
+            newCell.setAttribute('data-cell-id', newCellId);
+            newCell.setAttribute('draggable', 'true');
+            
+            newCell.innerHTML = `
+                <div class="cell-type">Lua</div>
+                <div class="cell-controls">
+                    <div class="cell-move">↕</div>
+                </div>
+                <div class="input-area">
+                    <span class="cell-number">In [${cellCounter.code}]:</span>
+                    <div class="code-editor-container">
+                        <textarea id="code-editor-${cellCounter.code}">-- Enter your Lua code here</textarea>
+                    </div>
+                    <div class="cell-buttons">
+                        <button class="run-button" hx-post="/api/execute" hx-include="closest .code-editor-container" hx-target="closest .cell .output-area" hx-indicator=".spinner">
+                            Run <span class="spinner" style="display:none;"></span>
+                        </button>
+                        <button class="delete-cell">Delete</button>
+                    </div>
+                </div>
+                <div class="output-area" id="output-${cellCounter.code}"></div>
+            `;
+            
+            document.getElementById('cells').appendChild(newCell);
+            
+            // Initialize CodeMirror for the new cell
+            const textarea = document.getElementById(`code-editor-${cellCounter.code}`);
+            codeEditors[cellCounter.code] = CodeMirror.fromTextArea(textarea, {
+                mode: "lua",
+                theme: "dracula",
+                lineNumbers: true,
+                indentUnit: 4,
+                tabSize: 4,
+                lineWrapping: true,
+                autoCloseBrackets: true,
+                matchBrackets: true
+            });
+            
+            setupDragAndDrop();
+            renumberCodeCells();
+        });
+
+        document.getElementById('add-text-cell').addEventListener('click', function() {
+            cellCounter.md++;
+            const newCellId = `md-${cellCounter.md}`;
+            const newCell = document.createElement('div');
+            newCell.className = 'cell';
+            newCell.setAttribute('data-cell-type', 'markdown');
+            newCell.setAttribute('data-cell-id', newCellId);
+            newCell.setAttribute('draggable', 'true');
+            
+            newCell.innerHTML = `
+                <div class="cell-type">Markdown</div>
+                <div class="cell-controls">
+                    <div class="cell-move">↕</div>
+                </div>
+                <div class="input-area">
+                    <div class="markdown-editor">
+                        <textarea id="md-editor-${cellCounter.md}">Enter markdown here</textarea>
+                    </div>
+                    <div class="markdown-render" style="display: none;">
+                        <p>Enter markdown here</p>
+                    </div>
+                    <div class="cell-buttons">
+                        <button class="edit-button">Render</button>
+                        <button class="delete-cell">Delete</button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('cells').appendChild(newCell);
+            
+            // Initialize CodeMirror for the new cell
+            const textarea = document.getElementById(`md-editor-${cellCounter.md}`);
+            markdownEditors[cellCounter.md] = CodeMirror.fromTextArea(textarea, {
+                mode: "markdown",
+                theme: "dracula",
+                lineNumbers: false,
+                lineWrapping: true
+            });
+            
+            setupDragAndDrop();
+        });
+
+        // Function to renumber code cells
+        function renumberCodeCells() {
+            let codeIndex = 1;
+            document.querySelectorAll('.cell[data-cell-type="code"]').forEach(cell => {
+                const cellNumber = cell.querySelector('.cell-number');
+                if (cellNumber) {
+                    cellNumber.textContent = `In [${codeIndex}]:`;
+                    codeIndex++;
+                }
+            });
+        }
+
+        // Drag and drop functionality
+        let draggedCell = null;
+
+        function setupDragAndDrop() {
+            const cells = document.querySelectorAll('.cell');
+            
+            cells.forEach(cell => {
+                cell.addEventListener('dragstart', function(e) {
+                    draggedCell = this;
+                    setTimeout(() => {
+                        this.classList.add('dragging');
+                    }, 0);
+                });
+                
+                cell.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                    draggedCell = null;
+                    
+                    // Remove all drop areas
+                    document.querySelectorAll('.cell-drop-area').forEach(area => {
+                        area.remove();
+                    });
+                    
+                    renumberCodeCells();
+                });
+                
+                cell.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    
+                    if (!draggedCell || draggedCell === this) {
+                        return;
+                    }
+                    
+                    const rect = this.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    
+                    // Check if mouse is above or below the middle of the cell
+                    if (e.clientY < midY) {
+                        // Position above
+                        showDropArea(this, 'before');
+                    } else {
+                        // Position below
+                        showDropArea(this, 'after');
+                    }
+                });
+                
+                cell.addEventListener('dragleave', function() {
+                    // Deactivate drop areas
+                    document.querySelectorAll('.cell-drop-area').forEach(area => {
+                        area.classList.remove('active');
+                    });
+                });
+                
+                cell.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    
+                    if (!draggedCell || draggedCell === this) {
+                        return;
+                    }
+                    
+                    const rect = this.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    
+                    if (e.clientY < midY) {
+                        // Insert before
+                        this.parentNode.insertBefore(draggedCell, this);
+                    } else {
+                        // Insert after
+                        this.parentNode.insertBefore(draggedCell, this.nextSibling);
+                    }
+                    
+                    // Refresh all CodeMirror instances
+                    Object.values(codeEditors).forEach(editor => editor.refresh());
+                    Object.values(markdownEditors).forEach(editor => editor.refresh());
+                });
+            });
+        }
+
+        function showDropArea(cell, position) {
+            // First remove active class from all drop areas
+            document.querySelectorAll('.cell-drop-area').forEach(area => {
+                area.classList.remove('active');
+            });
+            
+            // Then activate the appropriate one
+            let dropArea;
+            
+            if (position === 'before') {
+                dropArea = cell.previousElementSibling;
+                if (!dropArea || !dropArea.classList.contains('cell-drop-area')) {
+                    dropArea = document.createElement('div');
+                    dropArea.className = 'cell-drop-area';
+                    cell.parentNode.insertBefore(dropArea, cell);
+                }
+            } else {
+                dropArea = cell.nextElementSibling;
+                if (!dropArea || !dropArea.classList.contains('cell-drop-area')) {
+                    dropArea = document.createElement('div');
+                    dropArea.className = 'cell-drop-area';
+                    cell.parentNode.insertBefore(dropArea, cell.nextSibling);
+                }
+            }
+            
+            dropArea.classList.add('active');
+        }
+
+        // Initialize drag and drop
+        setupDragAndDrop();
+    </script>
+</body>
+</html>
