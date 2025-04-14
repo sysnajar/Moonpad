@@ -76,6 +76,19 @@
             border: 1px solid #ddd;
             border-radius: 3px;
         }
+        .run-from-top-button {
+            padding: 5px 10px;
+            background-color: #2196F3;  /* Different color to distinguish from regular run */
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 5px;  /* Add some spacing between buttons */
+        }
+
+        .run-from-top-button:hover {
+            background-color: #1976D2;
+        }
         .run-button {
             align-self: flex-end;
             margin-top: 5px;
@@ -128,6 +141,8 @@
             margin-top: 0.5em;
         }
         .edit-button {
+            display: flex;
+            gap: 5px;
             align-self: flex-end;
             margin-top: 5px;
             padding: 5px 10px;
@@ -188,6 +203,57 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+
+        .disable-cell-checkbox {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+.cell-disable-checkbox {
+    margin-right: 5px;
+}
+
+.cell[data-disabled="true"] .code-editor-container .CodeMirror {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.cell[data-disabled="true"] .run-button,
+.cell[data-disabled="true"] .run-from-top-button {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Add these new styles for better checkbox visibility */
+.cell-disable-checkbox {
+    position: relative;
+    width: 1em;
+    height: 1em;
+    border: 1px solid gray;
+    vertical-align: -2px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.disable-cell-checkbox {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+    padding: 4px;
+    background-color: #f8f8f8;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.disable-cell-checkbox:hover {
+    background-color: #eee;
+}
     </style>
 </head>
 <body>
@@ -206,6 +272,36 @@
     </div>
 
     <script>
+
+
+// Add event listener for checkbox changes
+function setupDisableCheckbox(cell) {
+    const checkbox = cell.querySelector('.cell-disable-checkbox');
+    if (checkbox) {
+        checkbox.addEventListener('change', (e) => {
+            const isDisabled = e.target.checked;
+            cell.dataset.disabled = isDisabled;
+            
+            // Update the cell data
+            const cellId = cell.dataset.cellId;
+            const cellIndex = notebookData.notebook.cells.findIndex(c => c.id === cellId);
+            
+            if (cellIndex !== -1) {
+                notebookData.notebook.cells[cellIndex].disabled = isDisabled;
+                console.log('Cell disabled state updated:', isDisabled);
+                console.log('Updated notebook data:', notebookData);
+            }
+
+            // Get the CodeMirror instance
+            const id = cellId.split('-')[1];
+            const editor = codeEditors[id];
+            if (editor) {
+                editor.setOption('readOnly', isDisabled);
+            }
+        });
+    }
+}
+
         // Initialize CodeMirror editors for code cells
         const codeEditors = {};
         const markdownEditors = {};
@@ -357,25 +453,42 @@ function listenUpdateCellData(editor, cell, id)
             newCell.setAttribute('data-cell-id', newCellId);
             newCell.setAttribute('draggable', 'true');
             
-            newCell.innerHTML = `
-                <div class="cell-type">Lua</div>
-                <div class="cell-controls">
-                    <div class="cell-move">↕</div>
-                </div>
-                <div class="input-area">
-                    <span class="cell-number">In [${cellCounter.code}]:</span>
-                    <div class="code-editor-container">
-                        <textarea id="code-editor-${cellCounter.code}">-- Enter your Lua code here</textarea>
-                    </div>
-                    <div class="cell-buttons">
-                        <button class="run-button" hx-post="/api/execute" hx-include="closest .code-editor-container" hx-target="closest .cell .output-area" hx-indicator=".spinner">
-                            Run <span class="spinner" style="display:none;"></span>
-                        </button>
-                        <button class="delete-cell">Delete</button>
-                    </div>
-                </div>
-                <div class="output-area" id="output-${cellCounter.code}"></div>
-            `;
+            // In your add-code-cell event listener, modify the newCell.innerHTML:
+     newCell.innerHTML = `
+    <div class="cell-type">Lua</div>
+    <div class="cell-controls">
+        <div class="cell-move">↕</div>
+    </div>
+    <div class="input-area">
+        <span class="cell-number">In [${cellCounter.code}]:</span>
+        <div class="code-editor-container">
+            <textarea id="code-editor-${cellCounter.code}"></textarea>
+        </div>
+        <div class="cell-buttons">
+            <label class="disable-cell-checkbox">
+                <input type="checkbox" class="cell-disable-checkbox">
+                Disable
+            </label>
+            <button class="run-from-top-button" 
+                    hx-post="/api/execute-from-top" 
+                    hx-include="previous .code-editor-container" 
+                    hx-target="closest .cell .output-area" 
+                    hx-indicator=".spinner">
+                Run from Top <span class="spinner" style="display:none;"></span>
+            </button>
+            <button class="run-button" 
+                    hx-post="/api/execute" 
+                    hx-include="closest .code-editor-container" 
+                    hx-target="closest .cell .output-area" 
+                    hx-indicator=".spinner">
+                Run <span class="spinner" style="display:none;"></span>
+            </button>
+            <button class="delete-cell">Delete</button>
+        </div>
+    </div>
+    <div class="output-area" id="output-${cellCounter.code}"></div>
+`;
+
             
             document.getElementById('cells').appendChild(newCell);
             
@@ -395,7 +508,9 @@ function listenUpdateCellData(editor, cell, id)
             setupDragAndDrop();
             renumberCodeCells();
             const cell = document.querySelector(`[data-cell-id="code-${cellCounter.code}"]`)
+            setupDisableCheckbox(cell)
             listenUpdateCellData(codeEditors[cellCounter.code],cell, cellCounter.code)
+            
         });
 
         document.getElementById('add-text-cell').addEventListener('click', function() {
