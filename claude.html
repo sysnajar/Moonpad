@@ -214,6 +214,35 @@
             md: 0
         };
 
+        // Initialize notebook data structure
+let notebookData = {
+    notebook: {
+        title: "Untitled Lua Notebook",
+        created: new Date().toISOString(),
+        lastModified: new Date().toISOString(),
+        cells: []
+    }
+};
+
+// Function to update cell data
+function updateCellData(cell) {
+    const cellId = cell.dataset.cellId;
+    const cellType = cell.dataset.cellType;
+    
+    console.log('Updating cell:', {
+        cellId: cellId,
+        cellType: cellType,
+        cell: cell
+    });
+}
+
+function listenUpdateCellData(editor, cell, id)
+{
+    editor.on('change', (cm, change) => {
+        console.log('Editor changed:', id, change);
+         updateCellData(cell);
+})
+}
         document.querySelectorAll('[id^="code-editor-"]').forEach(textarea => {
             const id = textarea.id.split('-').pop();
             codeEditors[id] = CodeMirror.fromTextArea(textarea, {
@@ -365,6 +394,8 @@
             
             setupDragAndDrop();
             renumberCodeCells();
+            const cell = document.querySelector(`[data-cell-id="code-${cellCounter.code}"]`)
+            listenUpdateCellData(codeEditors[cellCounter.code],cell, cellCounter.code)
         });
 
         document.getElementById('add-text-cell').addEventListener('click', function() {
@@ -383,10 +414,10 @@
                 </div>
                 <div class="input-area">
                     <div class="markdown-editor">
-                        <textarea id="md-editor-${cellCounter.md}">Enter markdown here</textarea>
+                        <textarea id="md-editor-${cellCounter.md}"></textarea>
                     </div>
                     <div class="markdown-render" style="display: none;">
-                        <p>Enter markdown here</p>
+                        <p></p>
                     </div>
                     <div class="cell-buttons">
                         <button class="edit-button">Render</button>
@@ -407,6 +438,10 @@
             });
             
             setupDragAndDrop();
+            const cell = document.querySelector(`[data-cell-id="md-${cellCounter.md}"]`)
+
+            listenUpdateCellData(markdownEditors[cellCounter.md], cell , cellCounter.md)
+
         });
 
         // Function to renumber code cells
