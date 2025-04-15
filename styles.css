@@ -1,0 +1,267 @@
+body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .notebook-container {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .cell {
+            border-bottom: 1px solid #eee;
+            padding: 10px;
+            position: relative;
+            background-color: white;
+        }
+        .cell:last-child {
+            border-bottom: none;
+        }
+        .cell-controls {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 30px;
+            background-color: #f8f8f8;
+            border-right: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+        .cell-move {
+            cursor: move;
+            color: #999;
+            font-size: 14px;
+            padding: 3px;
+            user-select: none;
+        }
+        .cell-move:hover {
+            color: #333;
+        }
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            margin-left: 30px;
+        }
+        .cell-number {
+            color: #999;
+            font-family: monospace;
+            user-select: none;
+            margin-bottom: 5px;
+        }
+        .CodeMirror {
+            height: auto;
+            min-height: 80px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .run-from-top-button {
+            padding: 5px 10px;
+            background-color: #2196F3;  /* Different color to distinguish from regular run */
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 5px;  /* Add some spacing between buttons */
+        }
+
+        .run-from-top-button:hover {
+            background-color: #1976D2;
+        }
+        .run-button {
+            align-self: flex-end;
+            margin-top: 5px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .output-area {
+            background-color: #f8f8f8;
+            padding: 10px 10px 10px 40px;
+            border-radius: 3px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+           /* display: none;*/
+            margin-left: 30px;
+        }
+        .toolbar {
+            padding: 10px;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .add-cell {
+            padding: 5px 10px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .notebook-title {
+            font-size: 24px;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .markdown-render {
+            padding: 10px;
+            margin-left: 30px;
+            border: 1px solid #eee;
+            border-radius: 3px;
+            background-color: white;
+        }
+        .markdown-render h1, .markdown-render h2, .markdown-render h3 {
+            margin-top: 0.5em;
+        }
+        .edit-button {
+            display: flex;
+            gap: 5px;
+            align-self: flex-end;
+            margin-top: 5px;
+            padding: 5px 10px;
+            background-color: #607D8B;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .cell-buttons {
+            display: flex;
+            gap: 5px;
+            align-self: flex-end;
+        }
+        .dragging {
+            opacity: 0.5;
+            border: 2px dashed #666;
+        }
+        .cell-type {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 12px;
+            color: #999;
+            background-color: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .delete-cell {
+            padding: 5px 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .cell-drop-area {
+            height: 10px;
+            margin: 0;
+            transition: height 0.2s;
+        }
+        .cell-drop-area.active {
+            height: 40px;
+            background-color: #e3f2fd;
+            border: 2px dashed #2196F3;
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+
+        .disable-cell-checkbox {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+.cell-disable-checkbox {
+    margin-right: 5px;
+}
+
+.cell[data-disabled="true"] .code-editor-container .CodeMirror {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.cell[data-disabled="true"] .run-button,
+.cell[data-disabled="true"] .run-from-top-button {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Add these new styles for better checkbox visibility */
+.cell-disable-checkbox {
+    position: relative;
+    width: 1em;
+    height: 1em;
+    border: 1px solid gray;
+    vertical-align: -2px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+
+.disable-cell-checkbox {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+    padding: 4px;
+    background-color: #f8f8f8;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.disable-cell-checkbox:hover {
+    background-color: #eee;
+}
+// Add these styles to your CSS
+.output-area {
+    margin-top: 10px;
+    padding: 10px;
+    border-left: 3px solid #e0e0e0;
+}
+
+.output-content {
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.output-content pre {
+    margin: 0;
+    padding: 5px;
+    background-color: #f5f5f5;
+    border-radius: 3px;
+}
+
+.error-output {
+    color: #d32f2f;
+    background-color: #ffebee;
+    padding: 5px;
+    border-radius: 3px;
+}
