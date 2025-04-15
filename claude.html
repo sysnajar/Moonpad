@@ -106,7 +106,7 @@
             margin-top: 10px;
             font-family: monospace;
             white-space: pre-wrap;
-            display: none;
+           /* display: none;*/
             margin-left: 30px;
         }
         .toolbar {
@@ -253,6 +253,32 @@
 
 .disable-cell-checkbox:hover {
     background-color: #eee;
+}
+// Add these styles to your CSS
+.output-area {
+    margin-top: 10px;
+    padding: 10px;
+    border-left: 3px solid #e0e0e0;
+}
+
+.output-content {
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.output-content pre {
+    margin: 0;
+    padding: 5px;
+    background-color: #f5f5f5;
+    border-radius: 3px;
+}
+
+.error-output {
+    color: #d32f2f;
+    background-color: #ffebee;
+    padding: 5px;
+    border-radius: 3px;
 }
     </style>
 </head>
@@ -480,9 +506,11 @@ function listenUpdateCellData(editor, cell, id)
                     hx-post="/api/execute" 
                     hx-include="closest .code-editor-container" 
                     hx-target="closest .cell .output-area" 
-                    hx-indicator=".spinner">
+                    hx-indicator=".spinner"
+                    hx-swap="innerHTML">
                 Run <span class="spinner" style="display:none;"></span>
             </button>
+
             <button class="delete-cell">Delete</button>
         </div>
     </div>
@@ -510,6 +538,8 @@ function listenUpdateCellData(editor, cell, id)
             const cell = document.querySelector(`[data-cell-id="code-${cellCounter.code}"]`)
             setupDisableCheckbox(cell)
             listenUpdateCellData(codeEditors[cellCounter.code],cell, cellCounter.code)
+            // Add this line to process HTMX attributes on the new cell
+            htmx.process(cell);
             
         });
 
@@ -679,6 +709,44 @@ function listenUpdateCellData(editor, cell, id)
 
         // Initialize drag and drop
         setupDragAndDrop();
+    </script>
+
+
+    <script data-id="output_code">
+        // Add this to your JavaScript to handle output display
+function displayOutput(outputArea, result) {
+    // Clear previous output
+    outputArea.innerHTML = '';
+    
+    // Create output container
+    const outputContainer = document.createElement('div');
+    outputContainer.className = 'output-content';
+    
+    // Handle different types of output
+    if (typeof result === 'string') {
+        // For text output
+        const pre = document.createElement('pre');
+        pre.textContent = result;
+        outputContainer.appendChild(pre);
+    } else if (Array.isArray(result)) {
+        // For multiple lines of output
+        const pre = document.createElement('pre');
+        pre.textContent = result.join('\n');
+        outputContainer.appendChild(pre);
+    } else if (result.error) {
+        // For error messages
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-output';
+        errorDiv.textContent = result.error;
+        outputContainer.appendChild(errorDiv);
+    }
+    
+    outputArea.appendChild(outputContainer);
+}
+  
+
+
+ 
     </script>
 </body>
 </html>
