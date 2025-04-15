@@ -28,10 +28,8 @@
             <!-- Initially empty - cells will be added by user -->
         </div>
     </div>
-
-    <script>
-
-
+    <script src="config.js"> </script> 
+    <script> 
 // Add event listener for checkbox changes
 function setupDisableCheckbox(cell) {
     const checkbox = cell.querySelector('.cell-disable-checkbox');
@@ -77,6 +75,11 @@ let notebookData = {
         cells: []
     }
 };
+
+// Function to get notebook data
+function getNotebookData() {
+    return  notebookData;
+}
 
 // Function to update cell data
 function updateCellData(cell) {
@@ -235,10 +238,11 @@ function listenUpdateCellData(editor, cell, id)
                 Run from Top <span class="spinner" style="display:none;"></span>
             </button>
             <button class="run-button" 
-                    hx-post="/api/execute" 
-                    hx-include="closest .code-editor-container" 
-                    hx-target="closest .cell .output-area" 
+                    hx-post="${config.api_prefix}mp_execute"  
+                    hx-vals='{"myVal": "My Value"}' 
+                    hx-target="#output-${cellCounter.code}" 
                     hx-indicator=".spinner"
+                    hx-headers='js:{"Accept": "application/json", "Content-Type": "application/json"}'
                     hx-swap="innerHTML">
                 Run <span class="spinner" style="display:none;"></span>
             </button>
@@ -269,9 +273,10 @@ function listenUpdateCellData(editor, cell, id)
             renumberCodeCells();
             const cell = document.querySelector(`[data-cell-id="code-${cellCounter.code}"]`)
             setupDisableCheckbox(cell)
+            htmx.process(newCell);
             listenUpdateCellData(codeEditors[cellCounter.code],cell, cellCounter.code)
             // Add this line to process HTMX attributes on the new cell
-            htmx.process(cell);
+            
             
         });
 
@@ -476,6 +481,22 @@ function displayOutput(outputArea, result) {
     outputArea.appendChild(outputContainer);
 }
   
+// Add these event listeners to debug HTMX
+document.body.addEventListener('htmx:beforeRequest', function(evt) {
+    console.log('Before request:', evt.detail);
+});
+
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+    console.log('After request:', evt.detail);
+});
+
+document.body.addEventListener('htmx:targetError', function(evt) {
+    console.log('Target error:', evt.detail);
+    console.log('Target element:', evt.detail.target);
+    console.log('Closest cell:', evt.detail.elt.closest('.cell'));
+    console.log('Output area:', evt.detail.elt.closest('.cell').querySelector('.output-area'));
+});
+
 
 
  

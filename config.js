@@ -1,0 +1,1 @@
+config = {"api_prefix":"https://example.xcom/pdf_mod/api/"}
